@@ -3,7 +3,10 @@ package com.example.kafka.consumer;
 import com.example.kafka.model.OrderEvent;
 import com.example.kafka.serde.JsonSerde;
 import com.example.kafka.store.InMemoryOrderStore;
-import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 
 import java.time.Duration;
@@ -18,23 +21,8 @@ public class OrderConsumerApp {
 
     public static void main(String[] args) throws Exception {
 
-        Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "orders-consumer-group-demo-");
-
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-                "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                "org.apache.kafka.common.serialization.StringDeserializer");
-
-        // Disable auto-commit so offset management is fully explicit
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
-
-        // For demo purposes: if no offset exists, start from the beginning
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-
+        Properties props = getProperties();
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
-
         consumer.subscribe(Collections.singletonList(TOPIC));
 
         System.out.println("Waiting for partition assignment...");
@@ -49,7 +37,7 @@ public class OrderConsumerApp {
 
         // Force a deterministic starting position for this demo
         consumer.seekToBeginning(assignedPartitions);
-        System.out.println("Seeked to beginning of assigned partitions");
+        System.out.println("Sought to beginning of assigned partitions");
 
         System.out.println("Consumer started, polling for records...");
 
@@ -58,9 +46,7 @@ public class OrderConsumerApp {
 
         try {
             while (true) {
-                ConsumerRecords<String, String> records =
-                        consumer.poll(Duration.ofSeconds(1));
-
+                ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(1));
                 if (records.isEmpty()) {
                     continue;
                 }
@@ -95,9 +81,7 @@ public class OrderConsumerApp {
                     // Failure path:
                     // - offsets are NOT committed
                     // - records will be replayed
-                    System.err.println(
-                            "Processing failed, offsets not committed: " + e.getMessage()
-                    );
+                    System.err.println("Processing failed, offsets not committed: " + e.getMessage());
 
                     // Backoff to avoid tight failure loops
                     Thread.sleep(1000);
@@ -106,5 +90,23 @@ public class OrderConsumerApp {
         } finally {
             consumer.close();
         }
+    }
+
+    private static Properties getProperties() {
+        Properties props = new Properties();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "orders-consumer-group-demo-");
+
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+                "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+                "org.apache.kafka.common.serialization.StringDeserializer");
+
+        // Disable auto-commit so offset management is fully explicit
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+
+        // For demo purposes: if no offset exists, start from the beginning
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        return props;
     }
 }

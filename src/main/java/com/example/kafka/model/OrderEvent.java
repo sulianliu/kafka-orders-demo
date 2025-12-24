@@ -36,36 +36,36 @@ public class OrderEvent {
         return eventId;
     }
 
-    public String getEventType() {
-        return eventType;
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
     public void setEventId(String eventId) {
         this.eventId = eventId;
+    }
+
+    public String getEventType() {
+        return eventType;
     }
 
     public void setEventType(String eventType) {
         this.eventType = eventType;
     }
 
+    public String getOrderId() {
+        return orderId;
+    }
+
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
 
+    public long getTimestamp() {
+        return timestamp;
+    }
+
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getPayload() {
+        return payload;
     }
 
     public void setPayload(String payload) {
